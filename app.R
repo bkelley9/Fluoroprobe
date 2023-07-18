@@ -34,10 +34,10 @@ ui <- fluidPage(
     mainPanel(
       tabsetPanel(
         tabPanel("FP Data",
-          tableOutput("fpdata_table")
+          DT::dataTableOutput("fpdata_table")
         ),
         tabPanel("Lab ID",
-          tableOutput("labid_table")
+          DT::dataTableOutput("labid_table")
         ),
         tabPanel("Raw Results",
                  DT::dataTableOutput("rawresults_table")
@@ -65,8 +65,8 @@ server <- function(input, output){
                colClasses = c("character", rep("numeric", 4), rep("NULL", 3), rep("numeric", 3), rep("NULL", 21)))
   })
   
-  output$fpdata_table <- renderTable(
-    fp_file()
+  output$fpdata_table <- renderDT(
+    DT::datatable(fp_file())
   )
 #-------------------------------------------------------------------------------
   
@@ -79,14 +79,16 @@ server <- function(input, output){
              colClasses = c("numeric", "factor", "factor", "factor", "character", "numeric", "numeric", "character"))
   })
 
-  output$labid_table <- renderTable(
-    labid_file()
+  output$labid_table <- renderDT(
+    DT::datatable(labid_file())
   )
 #-------------------------------------------------------------------------------
 
 #----------------Create "Raw Results" dataframe and show in table---------------
   Raw_Results <- reactive({
     fp_raw <- fp_file()
+    
+    fp_raw[!apply(fp_raw == "", 1, all),]
     
     fp_raw$DateTime <- as.POSIXct(fp_raw$DateTime, format = "%m/%d/%Y %H:%M")
     
@@ -96,6 +98,9 @@ server <- function(input, output){
     fp_raw$DateTime <- as.POSIXct(fp_raw$DateTime, tz = "EST", origin = "1970-01-01")
     
     labid_raw <- labid_file()
+    
+    labid_raw[!apply(labid_raw == "", 1, all),]
+    
     labid_raw <- labid_raw %>%
       mutate(dilution_factor = (.$Svol+.$MQvol)/.$Svol)
     
