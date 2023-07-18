@@ -1,0 +1,19 @@
+#,Lake info,Sample ID,Type,Start Time ,ml sample,ml MQ,Comments
+1,MQ,ICB,Blank,15:22:12,25,0,
+2,Keuka,230621_KLA_01,Raw Water,15:27:14,25,0,Duplicate
+3,Keuka,230621_KLA_01,Raw Water,15:30:13,25,0,Duplicate
+4,Keuka,230621_KLA_02,Raw Water,15:32:50,25,0,
+5,Keuka,230621_KLA_03,Raw Water,15:35:04,25,0,
+6,Keuka,230621_KLA_04,Raw Water,15:37:56,25,0,
+7,Keuka,230621_KLA_05,Raw Water,15:40:05,25,0,
+8,Keuka,230621_KLA_06,Raw Water,15:42:29,25,0,
+9,Keuka,230621_KLA_07,Raw Water,15:44:54,25,0,
+10,Keuka,230621_KLA_08,Raw Water,15:47:21,25,0,
+11,Keuka,230621_KLA_09,Raw Water,15:49:24,25,0,
+12,MQ,CCB,Blank,15:52:55,25,0,
+13,Keuka,230621_KLA_10,Raw Water,15:54:51,25,0,Duplicate
+14,Keuka,230621_KLA_10,Raw Water,15:56:49,25,0,Duplicate
+15,Keuka,230621_KLA_11,Raw Water,15:58:53,25,0,
+16,Keuka,230621_KLA_12,Raw Water,16:01:30,25,0,
+17,Keuka,230621_KLA_FB,Raw Water,16:03:31,25,0,
+18,MQ,CCB,Blank,16:05:41,25,0,

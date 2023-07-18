@@ -11,7 +11,7 @@ ui <- fluidPage(
     tags$style(HTML(".shiny-output-error-validation {
                     color: red; }"))
   ),
-  titlePanel("Fluoroprobe Analysis GUI"),
+  titlePanel("Fluoroprobe Analysis"),
   sidebarLayout(
     sidebarPanel(
       div(id = "File_Inputs",
@@ -140,6 +140,13 @@ server <- function(input, output){
     DT::datatable(final_report())
   )
 #-------------------------------------------------------------------------------
+  output$save_button <- renderUI({
+    validate(
+      need(input$project_sel != "", message = "Need to select projects")
+    )
+    actionButton("save_data", "Save Data", class = "btn-success")
+  })
+  
   raw_filename <- reactive({
     date <- strftime(input$date_sel, format = "%y%m%d")
     
@@ -156,12 +163,6 @@ server <- function(input, output){
     paste0(date, "_", proj)
   })
   
-  output$save_button <- renderUI({
-    validate(
-      need(input$project_sel != "", message = "Need to select projects")
-    )
-    actionButton("save_data", "Save Data", class = "btn-success")
-  })
   
   observeEvent(input$save_data, {
     req(input$labid, input$fpdata)

@@ -1,0 +1,11 @@
+#,Lake info,Sample ID,Type,Start Time ,ml sample,ml MQ,Comments
+1,MQ,ICB,Blank,12:00:06,25,0,
+2,Owasco,230613_OW_Buoy_S,Raw Water,12:03:57,25,0,Duplicate
+3,Owasco,230613_OW_Buoy_S,Raw Water,12:05:22,25,0,Duplicate
+4,Owasco,230613_OW_Buoy_T,Raw Water,12:07:10,25,0,
+5,Owasco,230613_OW_Buoy_B,Raw Water,12:09:40,25,0,
+6,Honeoye,230613_HN_7M_S,Raw Water,12:12:14,25,0,
+7,Honeoye,230613_HN_7M_B,Raw Water,12:14:13,25,0,
+8,Honeoye,230613_HN_9M_S,Raw Water,12:16:53,25,0,
+9,Honeoye,230613_HB_9M_B,Raw Water,12:19:33,25,0,
+10,MQ,CCB,Blank,12:21:17,25,0,

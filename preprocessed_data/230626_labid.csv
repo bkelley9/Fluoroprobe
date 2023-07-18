@@ -1,0 +1,8 @@
+#,Lake info,Sample ID,Type,Start Time ,ml sample,ml MQ,Comments
+1,MQ,ICB,Blank,14:12:13,25,0,
+2,Honeoye,230626_HN_7M.S,Raw Water,14:14:49,25,0,Duplicate
+3,Honeoye,230626_HN_7M.S,Raw Water,14:18:25,25,0,Duplicate
+4,Honeoye,230626_HN_7M.B,Raw Water,14:21:39,25,0,
+5,Honeoye,230626_HN_9M.S,Raw Water,14:24:30,25,0,
+6,Honeoye,230626_HN_9M.B,Raw Water,14:27:04,25,0,
+7,MQ,CCB,Blank,14:28:52,25,0,
