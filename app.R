@@ -90,7 +90,7 @@ server <- function(input, output){
     
     fp_raw[!apply(fp_raw == "", 1, all),]
     
-    fp_raw$DateTime <- as.POSIXct(fp_raw$DateTime, format = "%m/%d/%Y %H:%M")
+    fp_raw$DateTime <- as.POSIXct(fp_raw$DateTime, format = "%m/%d/%Y %H:%M", tz = "EST")
     
     fp_raw <- fp_raw %>%
       reframe(across(names(fp_raw), ~ round(colMeans(matrix(.x, nrow =10)), digits=4), .names = "{.col}"))
@@ -108,6 +108,8 @@ server <- function(input, output){
       reframe(across(-c(DateTime, Transmission), ~ .x*labid_raw$dilution_factor, .names = "{.col}_f"))
     multiply_by_df$DateTime <- fp_raw$DateTime
     multiply_by_df$Transmission <- fp_raw$Transmission
+    
+    fp_raw$DateTime <- format(fp_raw$DateTime, "%m/%d/%Y, %H:%M:%S")
     
     Raw_Results_df <- cbind(labid_raw, fp_raw, subset(multiply_by_df, select = -c(DateTime, Transmission))) %>%
       select(DateTime, Site, ID, Type, Start, dilution_factor, Greens, Cyano, Diatoms, Crypto, Yellow, Total,
@@ -127,7 +129,7 @@ server <- function(input, output){
     filter_dups <- Raw_df %>%
       subset(Transmission >= 90) %>%
       group_by(Site, ID, .add = TRUE) %>%
-      summarise(Green_Chl=mean(Greens_f), Bluegreen_Chl = mean(Cyano_f), Diatom_Chl=mean(Diatoms_f), 
+      summarise(count = n(), Green_Chl=mean(Greens_f), Bluegreen_Chl = mean(Cyano_f), Diatom_Chl=mean(Diatoms_f), 
                 Cryptophyte_Chl=mean(Crypto_f), Total_Chl=mean(Total_f), Yellow_Sub=mean(Yellow_f)) %>%
       ungroup()
     
@@ -137,7 +139,7 @@ server <- function(input, output){
     fp_report$ID <- filter_dups$ID
     
     fp_report <- fp_report %>%
-      select(Site, ID, Green_Chl, Bluegreen_Chl, Diatom_Chl, Cryptophyte_Chl, Total_Chl, Yellow_Sub)
+      select(Site, ID, count, Green_Chl, Bluegreen_Chl, Diatom_Chl, Cryptophyte_Chl, Total_Chl, Yellow_Sub)
   })
   
  
@@ -147,7 +149,8 @@ server <- function(input, output){
 #-------------------------------------------------------------------------------
   output$save_button <- renderUI({
     validate(
-      need(input$project_sel != "", message = "Need to select projects")
+      need(input$project_sel != "", message = "Need to select projects"),
+      need(str_sub(input$fpdata$name, 1, 6) == str_sub(input$labid$name, 1, 6), message = "Mismatching Data and LabID files. Please check file names")
     )
     actionButton("save_data", "Save Data", class = "btn-success")
   })
