@@ -1,0 +1,13 @@
+#,Lake Info,Sample ID,Type,Start Time,ml sample,ml MQ,Comments
+1,MQ,ICB,blank,15:19:27,25,0,
+2,KE,230719_KLA_FB,Raw Water,15:22:29,25,0,
+3,KE,230719_KLA_01,Raw Water,15:25:14,25,0,
+4,KE,230719_KLA_03,Raw Water,15:27:28,25,0,
+5,KE,230719_KLA_05,Raw Water,15:29:51,25,0,
+6,KE,230719_KLA_07,Raw Water,15:32:04,25,0,Duplicate
+7,KE,230719_KLA_07,Raw Water,15:33:57,25,0,Duplicate
+8,KE,230719_KLA_09,Raw Water,15:36:05,25,0,
+9,KE,230719_KLA_10,Raw Water,15:38:14,25,0,
+10,KE,230719_KLA_11,Raw Water,15:40:37,25,0,
+11,KE,230719_KLA_12,Raw Water,15:44:28,25,0,
+12,MQ,CCB,blank,15:46:15,25,0,
