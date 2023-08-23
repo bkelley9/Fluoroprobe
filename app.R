@@ -4,6 +4,7 @@ library(DT)
 library(shinyjs)
 library(shinythemes)
 library(reactable)
+library(openxlsx)
 
 ui <- fluidPage(theme = shinytheme("flatly"),
   useShinyjs(),
@@ -17,11 +18,11 @@ ui <- fluidPage(theme = shinytheme("flatly"),
     sidebarPanel(
       div(id = "File_Inputs",
           fileInput("fpdata_file", "Select FPdata file", accept = ".txt"),
-          actionButton("deletefprows", "Delete FP Rows", class = "btn-danger"),
+          actionButton("deletefprows", "Delete FP Rows", class = "btn-info"),
           br(),
           br(),
           fileInput("labid_file", "Select LabID file", accept = ".csv"),
-          actionButton("deleteIDrows", "Delete LabID Rows", class = "btn-danger"),
+          actionButton("deleteIDrows", "Delete LabID Rows", class = "btn-info"),
           br(),
           br()
           ),
@@ -47,11 +48,11 @@ ui <- fluidPage(theme = shinytheme("flatly"),
         tabPanel("Lab ID",
           DT::dataTableOutput("labid_table")
         ),
-        tabPanel("Raw Results",
-                 reactableOutput("rawresults_table")
+        tabPanel("QA/QC",
+                 reactableOutput("qaqc_table")
         ),
         tabPanel("FP Report",
-                 DT::dataTableOutput("finalreport_table"))
+                 reactableOutput("finalreport_table"))
       )
     )
   )
@@ -108,7 +109,11 @@ server <- function(input, output){
   #and delete rows (if a run is bad or should not be included)
   output$labid_table <- renderDT(
     DT::datatable(origin$labIDdata,
-                  editable = list(target = "cell", disable = list(columns = c(1:2, 4:8))))
+                  options = list(
+                    pageLength = -1,
+                    lengthMenu = list(c(-1, 10), c("All", "10"))
+                  ),
+                  editable = list(target = "cell", disable = list(columns = c(1:2, 4:7))))
   )
   #editable cells
   observeEvent(input$labid_table_cell_edit, {
@@ -157,33 +162,80 @@ server <- function(input, output){
     
     #Combine dataframes to produce "raw results" and move Transmission column to the front
     cbind(labid_file, fp_file, multiply_by_df) %>%
-      select(DateTime, Site, ID, Type, Start, dilution_factor, Greens, Cyano, Diatoms, Crypto, Yellow, Total,
-             Greens_f, Cyano_f, Diatoms_f, Crypto_f, Yellow_f, Total_f, Transmission, Comments) %>%
-      relocate(Transmission, .before = Type)
+      select(DateTime, Site, ID, Transmission, Type, Start, dilution_factor, Greens, Cyano, Diatoms, Crypto, Yellow, Total,
+             Greens_f, Cyano_f, Diatoms_f, Crypto_f, Yellow_f, Total_f, Comments)
     
   })
   
+  QAQC_df <- reactive({
+    Raw_Results() %>%
+      select(DateTime, Site, ID, Transmission, Type, Start, dilution_factor, Total, Total_f, Comments) %>%
+      group_by(ID) %>%
+      mutate(RPD_Total = ifelse(length(ID)==2, round((max(Total)-min(Total))/mean(Total)*100,2), NA)) %>%
+      mutate(RPD_Total_F = ifelse(length(ID)==2, round((max(Total_f)-min(Total_f))/mean(Total_f)*100,2), NA))
+      
+  })
+  
+  Field_Blanks <- reactive({
+    Raw_Results <- Raw_Results()
+    if (all(grepl("FB", Raw_Results$ID)) == F){
+      NULL
+    } else {
+      Raw_Results %>%
+        filter(grepl("FB"))
+    }
+  })
+  
   #Display "raw results" in a table ONLY if the original FPdata file is 10x long as LabID file.
-  #Conditional formatting of Transmission column to be red if < 90
-  output$rawresults_table <- renderReactable({
+  #Conditional formatting of Transmission column to be red if < 90 
+  output$qaqc_table <- renderReactable({
     validate({
       req(input$fpdata_file)
       req(input$labid_file)
       
       need(nrow(origin$fpdata)/nrow(origin$labIDdata)== 10, message = "Data and LabID files not of proportional length")
     })
-    reactable(Raw_Results(),
+    reactable(QAQC_df(),
+              defaultPageSize = nrow(QAQC_df()),
               columns = list(
                 Transmission = colDef(style = function(value){
                   if (value < 90){
                     color <- "red"
-                    
+                  }else {
+                      color <- "#00CD00"
+                    }
                     list(color = color)
+                }),
+                RPD_Total = colDef(style = function(value){
+                  if(is.na(value)==T){
+                    color <- NULL
                   }
+                  if(is.na(value) == F){
+                    if(value > 15){
+                    color <- "red"
+                    } else {
+                    color <- "#00CD00"
+                    }
+                  }
+                  list(color = color)
+                }),
+                RPD_Total_F = colDef(style = function(value){
+                  if(is.na(value)==T){
+                    color <- NULL
+                  }
+                  if(is.na(value) == F){
+                    if(value > 15){
+                      color <- "red"
+                    } else {
+                      color <- "#00CD00"
+                    }
+                  }
+                  list(color = color)
                 })
-              )
             )
+    )
   })
+  
 #-------------------------------------------------------------------------------
 
 #----------------Create "Final Report" dataframe and show in table--------------
@@ -192,22 +244,23 @@ server <- function(input, output){
     #Create final dataframe by removing rows with Transmission < 90, group by Sample ID and Site,
     #average results rounded to 2 digits, and finally select desired columns to be included in final output
     fp_report <- Raw_Results() %>%
-      subset(Transmission >= 90) %>%
+      filter(Transmission >= 90, !grepl("MQ", Site)) %>%
       group_by(Site, ID, .add = TRUE) %>%
-      summarise(count = n(), Green_Chl=round(mean(Greens_f), 2), Bluegreen_Chl = round(mean(Cyano_f), 2), Diatom_Chl=round(mean(Diatoms_f),2 ), 
-                Cryptophyte_Chl=round(mean(Crypto_f), 2), Total_Chl=round(mean(Total_f),  2), Yellow_Sub=round(mean(Yellow_f), 2)) %>%
-      ungroup() %>%
-      select(Site, ID, count, Green_Chl, Bluegreen_Chl, Diatom_Chl, Cryptophyte_Chl, Total_Chl, Yellow_Sub)
+      summarise(count = n(), Green_Chl= round(mean(Greens_f), 2), Bluegreen_Chl = round(mean(Cyano_f), 2), Diatom_Chl= round(mean(Diatoms_f),2 ), 
+                Cryptophyte_Chl= round(mean(Crypto_f), 2), Total_Chl= round(mean(Total_f),  2), .groups = "drop") %>%
+      select(Site, ID, count, Green_Chl, Bluegreen_Chl, Diatom_Chl, Cryptophyte_Chl, Total_Chl)
   })
   
  #Display table ONLY if original FPdata file is 10x long as LabID file
-  output$finalreport_table <- renderDT({
+  output$finalreport_table <- renderReactable({
     validate({
       req(input$fpdata_file)
       req(input$labid_file)
       need(nrow(origin$fpdata)/nrow(origin$labIDdata)== 10, message = "Data and LabID files not of proportional length")
     })
-    DT::datatable(final_report())
+    reactable(final_report(),
+              defaultPageSize = nrow(final_report()),
+              )
   })
 #-------------------------------------------------------------------------------
   #Enable saving of data only if input parameters are selected, date of FP and LabID files match, and if
@@ -219,11 +272,11 @@ server <- function(input, output){
       need(str_sub(input$fpdata_file$name, 1, 6) == str_sub(input$labid_file$name, 1, 6), message = "Mistmatching Data and LabID files"),
       need(nrow(origin$fpdata)/nrow(origin$labIDdata)== 10, message = "")
     )
-    actionButton("save_data", "Save Data", class = "btn-success")
+      actionButton("save_data", "Save Data", class = "btn-success")
   })
   
   #Use input parameters to create file name for "QAQC" output
-  raw_filename <- reactive({
+  qaqc_filename <- reactive({
     date <- strftime(input$date_sel, format = "%y%m%d")
     
     proj <- paste(input$project_sel, collapse = "_")
@@ -232,7 +285,7 @@ server <- function(input, output){
       comment <- paste0(toupper(input$comment), "_")
     } else comment = input$comment
     
-    paste0("QAQC","_", date, "_", comment, proj)
+    paste0(date, "_QAQC_", comment, proj)
   })
   
   #Use input parameters to create file name for final report output
@@ -251,9 +304,24 @@ server <- function(input, output){
   #Save data upon clicking save button
   observeEvent(input$save_data, {
     req(input$labid_file, input$fpdata_file)
+
+    Raw_Results <- Raw_Results()
     
-    write.csv(Raw_Results(), paste0("C:/Users/KELLEY/Documents/R Main Directory/Fluoroprobe/QAQC/",raw_filename(),".csv"), row.names = FALSE)
-    write.csv(final_report(), paste0("C:/Users/KELLEY/Documents/R Main Directory/Fluoroprobe/final_reports/",fp_filename(),".csv"), row.names = FALSE)
+    Field_Blanks <- Raw_Results %>%
+        filter(grepl("FB", ID)) %>%
+        select(-c(Greens_f, Cyano_f, Diatoms_f, Crypto_f, Yellow_f, Total_f))
+    
+    Blanks <- Raw_Results %>%
+      filter(grepl("Blank", Type, ignore.case = T)) %>%
+      select(-c(Greens_f, Cyano_f, Diatoms_f, Crypto_f, Yellow_f, Total_f))
+    
+    QAQC <- QAQC_df() %>%
+      filter(!grepl("Blank", Type, ignore.case = T))
+    
+    dataset <- list("QAQC" = QAQC, "Summary of Blanks" = Blanks, "Field Blanks" = Field_Blanks)
+    
+    write.xlsx(dataset, paste0(getwd(), "/QAQC/", qaqc_filename(),".xlsx"))
+    write.csv(final_report(), paste0(getwd(), "/final_reports/",fp_filename(),".csv"), row.names = FALSE)
   })
   
   #Reset file params upon file uploads
