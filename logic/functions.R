@@ -17,19 +17,24 @@ process_duplicates <- function(data){
     filter(!grepl("Blank", Type, ignore.case = T)) %>%
     group_by(ID) %>%
     mutate(RPD_Total = ifelse(length(ID)==2 & grepl("Duplicate", Comments, ignore.case = T), round((max(totChla)-min(totChla))/mean(totChla)*100,2), NA)) %>%
-    mutate(RPD_Total_F = ifelse(length(ID)==2 & grepl("Duplicate", Comments, ignore.case = T), round((max(totChla_f)-min(totChla_f))/mean(totChla_f)*100,2), NA))
+    mutate(RPD_Total_F = ifelse(length(ID)==2 & grepl("Duplicate", Comments, ignore.case = T), round((max(totChla_f)-min(totChla_f))/mean(totChla_f)*100,2), NA)) %>%
+    ungroup() %>%
+    mutate(Date_Analyzed = Sys.Date() %>% format("%m/%d/%Y")) %>%
+    select(ID, Date_Analyzed, DateTime, Site, Type, dilution_factor, Start, Transmission, totChla, totChla_f, Comments, RPD_Total, RPD_Total_F)
 }
 
 process_blanks <- function(data){
   data %>%
     filter(grepl("Blank", Type, ignore.case = T)) %>%
-    select(-c(Greens_f, Cyano_f, Diatoms_f, Crypto_f, Yellow_f, totChla_f))
+    mutate(Date_Analyzed = Sys.Date() %>% format("%m/%d/%Y")) %>%
+    select(ID, Date_Analyzed, DateTime, Site, Type, Start, dilution_factor, Transmission, Greens, Cyano, Diatoms, Crypto, Yellow, totChla, Comments)
 }
 
 process_field_blanks <- function(data){
   data %>%
     filter(grepl("FB", ID)) %>%
-    select(-c(Greens_f, Cyano_f, Diatoms_f, Crypto_f, Yellow_f, Total_f))
+    mutate(Date_Analyzed = Sys.Date() %>% format("%m/%d/%Y")) %>%
+    select(-c(Greens_f, Cyano_f, Diatoms_f, Crypto_f, Yellow_f, totChla_f))
 }
 
 process_output_preview <- function(data){
@@ -38,17 +43,12 @@ process_output_preview <- function(data){
     group_by(ID) %>%
     mutate(Count = n(), 
            across(Greens_f:totChla_f, ~ mean(.x) %>% round(2))) %>%
-    select(Site, ID, Type, Count, Greens_f, Cyano_f, Diatoms_f, Crypto_f, totChla_f)
+    ungroup() %>%
+    mutate(Date_Analyzed = Sys.Date() %>% format("%m/%d/%Y")) %>%
+    select(ID, Date_Analyzed, Site, Type, Count, Greens_f, Cyano_f, Diatoms_f, Crypto_f, totChla_f) %>%
+    unique()
     
-    names(output) <- c("Site", "ID", "Type", "Count", "Green_Chl", "Bluegreen_Chl", "Diatom_Chl", "Cryptophyte_Chl", "Total_Chl")
+    names(output) <- c("Sample.ID", "Date_Analyzed", "Site", "Type", "Count", "Green_Chl", "Bluegreen_Chl", "Diatom_Chl", "Cryptophyte_Chl", "Total_Chl")
 
     return(output)
-}
-
-process_blanks <- function(data){
-  output <- data %>%
-    filter(grepl("Blank", Type, ignore.case = T)) %>%
-    select(-c(Greens_f, Cyano_f, Diatoms_f, Crypto_f, Yellow_f, totChla_f))
-  
-  return(output)
 }

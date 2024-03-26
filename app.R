@@ -201,7 +201,7 @@ server <- function(input, output){
       )
   })
   
- #Show preview of processed output
+  #Show preview of processed output
   output$finalreport_table <- renderReactable({
     validate({
       req(input$fpdata_file)
@@ -216,7 +216,7 @@ server <- function(input, output){
   output$save_button <- renderUI({
     validate(
       need(str_sub(input$fpdata_file$name, 1, 6) == str_sub(input$labid_file$name, 1, 6), message = "Mistmatching Data and LabID files"),
-      need(nrow(origin$fpdata)/nrow(origin$labIDdata)== 10, message = "")
+      need(nrow(origin$fpdata)/nrow(origin$labiddata)== 10, message = "")
     )
       actionButton("save_data", "Save Data", class = "btn-success")
   })
@@ -224,13 +224,15 @@ server <- function(input, output){
   #Save data upon clicking save button
   observeEvent(input$save_data, {
 
-    QAQC_dataset <- list("QAQC" = process_qaqc(merged_file()) %>%
+    QAQC_dataset <- list("QAQC" = process_duplicates(merged_data()) %>%
                            filter(!grepl("Blank", Type, ignore.case = T)),
                          "Summary of Blanks" = process_blanks(merged_data()), 
-                         "Field Blanks" = Field_Blanks)
+                         "Field Blanks" = process_field_blanks(merged_data()))
+    QAQC_dataset %>%
+      write.xlsx(paste0(getwd(), "/QAQC/", str_sub(input$fpdata_file$name, 1, 6), "_FP_QAQC.xlsx"))
     
-    write.xlsx(dataset, paste0(getwd(), "/QAQC/", str_sub(input$fpdata_file$name, 1, 6), "_FP_QAQC.xlsx"))
-    write.csv(final_report(), paste0(getwd(), "/final_reports/",str_sub(input$fpdata_file$name, 1, 6),"_ELISA.csv"), row.names = FALSE)
+    process_output_preview(merged_data()) %>%
+      write.csv(paste0(getwd(), "/final_reports/",str_sub(input$fpdata_file$name, 1, 6),"_FP.csv"), row.names = FALSE)
   })
   
   #Reset file params upon FP file uploads
