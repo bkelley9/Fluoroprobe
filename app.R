@@ -30,6 +30,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
           br(),
           br()
           ),
+      textInput("description", "Description (optional)", value = ""),
       uiOutput("save_button"),
       span(textOutput("ready"), style = "color:green")
     ),
@@ -223,16 +224,18 @@ server <- function(input, output){
   
   #Save data upon clicking save button
   observeEvent(input$save_data, {
+    
+    fname <- file_name(str_sub(input$fpdata_file$name, 1, 6), input$description)
 
     QAQC_dataset <- list("QAQC" = process_duplicates(merged_data()) %>%
                            filter(!grepl("Blank", Type, ignore.case = T)),
                          "Summary of Blanks" = process_blanks(merged_data()), 
                          "Field Blanks" = process_field_blanks(merged_data()))
     QAQC_dataset %>%
-      write.xlsx(paste0(getwd(), "/QAQC/", str_sub(input$fpdata_file$name, 1, 6), "_FP_QAQC.xlsx"))
+      write.xlsx(paste0(getwd(), "/QAQC/", fname, "_QAQC.xlsx"))
     
     process_output_preview(merged_data()) %>%
-      write.csv(paste0(getwd(), "/final_reports/",str_sub(input$fpdata_file$name, 1, 6),"_FP.csv"), row.names = FALSE)
+      write.csv(paste0(getwd(), "/final_reports/", fname, ".csv"), row.names = FALSE)
   })
   
   #Reset file params upon FP file uploads
