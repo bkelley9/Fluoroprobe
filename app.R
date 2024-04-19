@@ -6,6 +6,7 @@ library(shinyjs)
 library(shinythemes)
 library(reactable)
 library(openxlsx)
+library(writexl)
 library(renv)
 
 source("logic/functions.R")
@@ -227,15 +228,13 @@ server <- function(input, output){
     
     fname <- file_name(str_sub(input$fpdata_file$name, 1, 6), input$description)
 
-    QAQC_dataset <- list("QAQC" = process_duplicates(merged_data()) %>%
-                           filter(!grepl("Blank", Type, ignore.case = T)),
-                         "Summary of Blanks" = process_blanks(merged_data()), 
-                         "Field Blanks" = process_field_blanks(merged_data()))
-    QAQC_dataset %>%
-      write.xlsx(paste0(getwd(), "/QAQC/", fname, "_QAQC.xlsx"))
-    
-    process_output_preview(merged_data()) %>%
-      write.csv(paste0(getwd(), "/final_reports/", fname, ".csv"), row.names = FALSE)
+    dataset <- list("Processed Data" = process_output_preview(merged_data()),
+                    "QAQC" = process_duplicates(merged_data()) %>%
+                      filter(!grepl("Blank", Type, ignore.case = T)),
+                    "Summary of Blanks" = process_blanks(merged_data()), 
+                    "Field Blanks" = process_field_blanks(merged_data()))
+    dataset %>%
+      write_xlsx(paste0(getwd(), "/final_reports/", fname, ".xlsx"))
   })
   
   #Reset file params upon FP file uploads
