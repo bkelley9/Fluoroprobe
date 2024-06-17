@@ -1,6 +1,5 @@
 library(shiny)
 library(tidyverse)
-library(janitor)
 library(DT)
 library(shinyjs)
 library(shinythemes)
@@ -66,8 +65,7 @@ server <- function(input, output){
     
     origin$labiddata <- read.csv(input$labid_file$datapath, header = FALSE, stringsAsFactors = FALSE, quote = "", skip = 1,
                            col.names = c("Number", "Site", "ID", "Type", "Start", "Svol", "MQvol", "Comments"),
-                           colClasses = c("numeric", "factor", "character", "factor", "character", "numeric", "numeric", "character")) %>%
-      janitor::remove_empty(c("rows", "cols"))
+                           colClasses = c("numeric", "factor", "character", "factor", "character", "numeric", "numeric", "character"))
     
   })
   
@@ -76,7 +74,7 @@ server <- function(input, output){
     req(input$fpdata_file)
     
     origin$fpdata <- read.table(input$fpdata_file$datapath, header = FALSE, sep = "\t", skip = 2, 
-                    col.names = c("DateTime", "Greens", "Cyano", "Diatoms", "Crypto", 
+                    col.names = c("DateTime_Analyzed", "Greens", "Cyano", "Diatoms", "Crypto", 
                              "#5", "#6", "#7", "Yellow", "totChla", "Transmission", 
                              "Depth", "Temperature", "GreenCells", "CyanoCells", "DiatomCells", 
                              "CryptoCells", "#5cells", "#6cells", "#7cells", "Yellow2", 
