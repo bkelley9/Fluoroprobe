@@ -6,6 +6,7 @@ library(shinythemes)
 library(reactable)
 library(openxlsx)
 library(writexl)
+library(shinyalert)
 library(renv)
 
 source("logic/functions.R")
@@ -233,6 +234,9 @@ server <- function(input, output){
                     "Field Blanks" = process_field_blanks(merged_data()))
     dataset %>%
       write_xlsx(paste0(getwd(), "/final_reports/", fname, ".xlsx"))
+    
+    shinyalert(title = "Saved",
+               type = "success")
   })
   
   #Reset file params upon FP file uploads
