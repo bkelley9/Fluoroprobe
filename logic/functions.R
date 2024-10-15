@@ -16,11 +16,11 @@ process_duplicates <- function(data){
     select(DateTime_Analyzed, Site, ID, Transmission, Type, Start, dilution_factor, totChla, totChla_f, Comments) %>%
     filter(!grepl("Blank", Type, ignore.case = T)) %>%
     group_by(ID) %>%
-    mutate(RPD_Total = ifelse(length(ID)==2 & grepl("Duplicate", Comments, ignore.case = T), round((max(totChla)-min(totChla))/mean(totChla)*100,2), NA)) %>%
-    mutate(RPD_Total_F = ifelse(length(ID)==2 & grepl("Duplicate", Comments, ignore.case = T), round((max(totChla_f)-min(totChla_f))/mean(totChla_f)*100,2), NA)) %>%
+    mutate(RPD_CV_Total = ifelse(length(ID) > 2, round(sd(totChla)/mean(totChla) * 100, 2), ifelse(length(ID)==2 & grepl("Duplicate", Comments, ignore.case = T), round((max(totChla)-min(totChla))/mean(totChla)*100,2), NA))) %>%
+    mutate(RPD_CV_Total_F = ifelse(length(ID) > 2, round(sd(totChla_f)/mean(totChla_f) * 100, 2), ifelse(length(ID)==2 & grepl("Duplicate", Comments, ignore.case = T), round((max(totChla_f)-min(totChla_f))/mean(totChla_f)*100,2), NA))) %>%
     ungroup() %>%
     mutate(Date_Processed = Sys.Date() %>% format("%m/%d/%Y")) %>%
-    select(ID, Date_Processed, DateTime_Analyzed, Site, Type, dilution_factor, Start, Transmission, totChla, totChla_f, Comments, RPD_Total, RPD_Total_F) %>%
+    select(ID, Date_Processed, DateTime_Analyzed, Site, Type, dilution_factor, Start, Transmission, totChla, totChla_f, Comments, RPD_CV_Total, RPD_CV_Total_F) %>%
     rename(Sample.ID = "ID")
 }
 
@@ -48,10 +48,10 @@ process_output_preview <- function(data){
            across(Greens_f:totChla_f, ~ mean(.x) %>% round(2))) %>%
     ungroup() %>%
     mutate(Date_Processed = Sys.Date() %>% format("%m/%d/%Y")) %>%
-    select(ID, Date_Processed, DateTime_Analyzed, Site, Type, Count, Greens_f, Cyano_f, Diatoms_f, Crypto_f, totChla_f) %>%
+    select(ID, Date_Processed, DateTime_Analyzed, Site, Type, Count, Greens_f, Cyano_f, Diatoms_f, Crypto_f, totChla_f, Yellow_f) %>%
     distinct(ID, .keep_all = T)
     
-    names(output) <- c("Sample.ID", "Date_Processed", "DateTime_Analyzed", "Site", "Type", "Count", "Green_Chl", "Bluegreen_Chl", "Diatom_Chl", "Cryptophyte_Chl", "Total_Chl")
+    names(output) <- c("Sample.ID", "Date_Processed", "DateTime_Analyzed", "Site", "Type", "Count", "Green_Chl", "Bluegreen_Chl", "Diatom_Chl", "Cryptophyte_Chl", "Total_Chl", "Yellow_subs")
 
     return(output)
 }

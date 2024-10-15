@@ -151,7 +151,7 @@ server <- function(input, output){
                     }
                     list(color = color)
                 }),
-                RPD_Total = colDef(style = function(value){
+                RPD_CV_Total = colDef(style = function(value){
                   if(is.na(value)==T){
                     color <- NULL
                   }
@@ -164,7 +164,7 @@ server <- function(input, output){
                   }
                   list(color = color)
                 }),
-                RPD_Total_F = colDef(style = function(value){
+                RPD_CV_Total_F = colDef(style = function(value){
                   if(is.na(value)==T){
                     color <- NULL
                   }
@@ -219,25 +219,27 @@ server <- function(input, output){
       need(str_sub(input$fpdata_file$name, 1, 6) == str_sub(input$labid_file$name, 1, 6), message = "Mistmatching Data and LabID files"),
       need(nrow(origin$fpdata)/nrow(origin$labiddata)== 10, message = "")
     )
-      actionButton("save_data", "Save Data", class = "btn-success")
+      downloadButton("save_data", "Save Data", class = "btn-success")
   })
   
   #Save data upon clicking save button
-  observeEvent(input$save_data, {
-    
-    fname <- file_name(str_sub(input$fpdata_file$name, 1, 6), input$description)
-
-    dataset <- list("Processed Data" = process_output_preview(merged_data()),
-                    "QAQC" = process_duplicates(merged_data()) %>%
-                      filter(!grepl("Blank", Type, ignore.case = T)),
-                    "Summary of Blanks" = process_blanks(merged_data()), 
-                    "Field Blanks" = process_field_blanks(merged_data()))
-    dataset %>%
-      write_xlsx(paste0(getwd(), "/final_reports/", fname, ".xlsx"))
-    
-    shinyalert(title = "Saved",
-               type = "success")
-  })
+  output$save_data <- downloadHandler(
+    filename = function(){
+      paste0(file_name(str_sub(input$fpdata_file$name, 1, 6), input$description), ".xlsx")
+    },
+    content = function(file){
+      
+      dataset <- list("Processed Data" = process_output_preview(merged_data()),
+                      "QAQC" = process_duplicates(merged_data()) %>%
+                        filter(!grepl("Blank", Type, ignore.case = T)),
+                      "Summary of Blanks" = process_blanks(merged_data()), 
+                      "Field Blanks" = process_field_blanks(merged_data()))
+      dataset %>%
+        write_xlsx(file)
+      
+      shinyalert(title = "Saved",
+                 type = "success")
+    })
   
   #Reset file params upon FP file uploads
   observeEvent(input$fpdata_file, {
