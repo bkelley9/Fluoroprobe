@@ -1,8 +1,0 @@
-"Site","ID","Type","count","Green_Chl","Bluegreen_Chl","Diatom_Chl","Cryptophyte_Chl","Total_Chl"
-"Honeoye","230613_HB_9M_B","Raw Water",1,0.36,0.41,0.36,0.11,1.23
-"Honeoye","230613_HN_7M_B","Raw Water",1,0.33,0.56,0.69,1.23,2.8
-"Honeoye","230613_HN_7M_S","Raw Water",1,2.4,0.77,0.58,1.81,5.57
-"Honeoye","230613_HN_9M_S","Raw Water",1,1.29,0.52,0.94,1.5,4.26
-"Owasco","230613_OW_Buoy_B","Raw Water",1,0,0.11,0.03,0.37,0.51
-"Owasco","230613_OW_Buoy_S","Raw Water",2,2.19,0.2,0.79,0.09,3.27
-"Owasco","230613_OW_Buoy_T","Raw Water",1,1.95,0,2.33,0.19,4.46

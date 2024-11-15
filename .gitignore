@@ -2,5 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
-final_reports
-preprocessed_data
+final_reports/
+preprocessed_data/
