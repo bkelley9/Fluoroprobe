@@ -8,6 +8,7 @@ library(openxlsx)
 library(writexl)
 library(shinyalert)
 library(renv)
+library(markdown)
 
 source("logic/functions.R")
 
@@ -37,6 +38,8 @@ ui <- fluidPage(theme = shinytheme("flatly"),
     ),
     mainPanel(
       tabsetPanel(
+        tabPanel("Instructions",
+                 includeMarkdown("README.md")),
         tabPanel("FP Data",
           DT::dataTableOutput("fpdata_table")
         ),
